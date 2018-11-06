@@ -79,9 +79,9 @@ public class ChainBuilder
     @FunctionalInterface
     public static interface ConsumerChain<T> extends Consumer<T>
     {
-        default ConsumerChain<T> and(Consumer<? super T> otherConsumer)
+        default ConsumerChain<T> and(Consumer<? super T> consumer)
         {
-            return andThen(otherConsumer)::accept;
+            return andThen(consumer)::accept;
         }
 
         default <U> FunctionChain<T, U> and(Function<? super T, U> function)
