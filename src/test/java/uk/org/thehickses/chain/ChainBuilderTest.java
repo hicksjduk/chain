@@ -160,15 +160,15 @@ public class ChainBuilderTest
     public void testSupplierGetWithDefaultMultiStepsExceptionThrownPartWayThrough()
     {
         Supplier<String> s = mock(Supplier.class);
+        Function<String, String> f1 = mock(Function.class);
         Function<String, String> f2 = mock(Function.class);
-        Function<String, String> f3 = mock(Function.class);
         when(s.get()).thenReturn(null);
-        when(f2.apply(null)).thenThrow(NullPointerException.class);
-        assertThat(ChainBuilder.chain(s).and(f2).and(f3).getWithDefault("Goodbye"))
+        when(f1.apply(null)).thenThrow(NullPointerException.class);
+        assertThat(ChainBuilder.chain(s).and(f1).and(f2).getWithDefault("Goodbye"))
                 .isEqualTo("Goodbye");
         verify(s).get();
-        verify(f2).apply(null);
-        verifyNoMoreInteractions(s, f2, f3);
+        verify(f1).apply(null);
+        verifyNoMoreInteractions(s, f1, f2);
     }
 
     @SuppressWarnings("unchecked")
@@ -208,15 +208,14 @@ public class ChainBuilderTest
     @Test
     public void testFunctionApplyWithDefaultMultiStepsExceptionThrownPartWayThrough()
     {
+        Consumer<String> c = mock(Consumer.class);
         Function<String, String> f1 = mock(Function.class);
         Function<String, String> f2 = mock(Function.class);
-        Function<String, String> f3 = mock(Function.class);
-        when(f1.apply("Hello")).thenReturn(null);
-        when(f2.apply(null)).thenThrow(NullPointerException.class);
-        assertThat(ChainBuilder.chain(f1).and(f2).and(f3).applyWithDefault("Hello", "Goodbye"))
+        when(f1.apply(null)).thenThrow(NullPointerException.class);
+        assertThat(ChainBuilder.chain(c).and(f1).and(f2).applyWithDefault(null, "Goodbye"))
                 .isEqualTo("Goodbye");
-        verify(f1).apply("Hello");
-        verify(f2).apply(null);
-        verifyNoMoreInteractions(f1, f2, f3);
+        verify(c).accept(null);
+        verify(f1).apply(null);
+        verifyNoMoreInteractions(c, f1, f2);
     }
 }
