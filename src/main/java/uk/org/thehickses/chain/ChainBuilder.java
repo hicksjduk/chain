@@ -59,7 +59,7 @@ public class ChainBuilder
     {
         try
         {
-            return Optional.of(supplier.get());
+            return Optional.ofNullable(supplier.get());
         }
         catch (NullPointerException ex)
         {
