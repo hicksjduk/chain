@@ -14,7 +14,7 @@ import java.util.function.Supplier;
  *
  * @author Jeremy Hicks
  */
-public class ChainBuilder
+public class Chain
 {
     /**
      * Creates a chain containing the specified function.
@@ -23,7 +23,7 @@ public class ChainBuilder
      *            the function.
      * @return the chain.
      */
-    public static <T, U> FunctionChain<T, U> chain(Function<T, U> function)
+    public static <T, U> FunctionChain<T, U> of(Function<T, U> function)
     {
         requireNonNull(function);
         return function::apply;
@@ -36,7 +36,7 @@ public class ChainBuilder
      *            the supplier.
      * @return the chain.
      */
-    public static <T> SupplierChain<T> chain(Supplier<T> supplier)
+    public static <T> SupplierChain<T> of(Supplier<T> supplier)
     {
         requireNonNull(supplier);
         return supplier::get;
@@ -49,7 +49,7 @@ public class ChainBuilder
      *            the consumer.
      * @return the chain.
      */
-    public static <T> ConsumerChain<T> chain(Consumer<T> consumer)
+    public static <T> ConsumerChain<T> of(Consumer<T> consumer)
     {
         requireNonNull(consumer);
         return consumer::accept;
@@ -67,7 +67,7 @@ public class ChainBuilder
         }
     }
 
-    private ChainBuilder()
+    private Chain()
     {
     }
 
