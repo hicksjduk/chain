@@ -23,7 +23,7 @@ public class Chain
      *            the function.
      * @return the chain.
      */
-    public static <T, U> FunctionChain<T, U> of(Function<T, U> function)
+    public static <T, R> FunctionChain<T, R> of(Function<T, R> function)
     {
         requireNonNull(function);
         return function::apply;
