@@ -90,7 +90,7 @@ public class Chain
          * @return a chainable function that returns the result of applying the specified function to the result of this
          *         function.
          */
-        default <V> FunctionChain<T, V> and(Function<? super R, ? extends V> function)
+        default <V> FunctionChain<T, V> and(Function<? super R, V> function)
         {
             requireNonNull(function);
             return andThen(function)::apply;
@@ -155,7 +155,7 @@ public class Chain
          *            the function.
          * @return a chainable supplier that returns the result of applying the function to the result of the supplier.
          */
-        default <U> SupplierChain<U> and(Function<? super T, ? extends U> function)
+        default <R> SupplierChain<R> and(Function<? super T, R> function)
         {
             requireNonNull(function);
             return () -> function.apply(get());
@@ -205,7 +205,7 @@ public class Chain
          * @return a chainable function that passes the input argument to the consumer, then applies the function to the
          *         same argument and returns the result.
          */
-        default <R> FunctionChain<T, R> and(Function<? super T, ? extends R> function)
+        default <R> FunctionChain<T, R> and(Function<? super T, R> function)
         {
             requireNonNull(function);
             return arg -> {
