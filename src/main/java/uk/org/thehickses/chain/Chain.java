@@ -205,7 +205,7 @@ public class Chain
          * @return a chainable function that passes the input argument to the consumer, then applies the function to the
          *         same argument and returns the result.
          */
-        default <U> FunctionChain<T, U> and(Function<? super T, ? extends U> function)
+        default <R> FunctionChain<T, R> and(Function<? super T, ? extends R> function)
         {
             requireNonNull(function);
             return arg -> {
