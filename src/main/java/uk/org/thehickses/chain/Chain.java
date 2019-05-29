@@ -111,7 +111,7 @@ public class Chain
         }
 
         /**
-         * Adds null tolerance tp this function, returning the supplied default value if the application of the function
+         * Adds null tolerance to this function, returning the supplied default value if the application of the function
          * throws a {@link NullPointerException}, or returns a null result.
          * 
          * @param arg
