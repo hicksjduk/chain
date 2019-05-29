@@ -128,7 +128,7 @@ public class ChainTest
     {
         Supplier<String> s = mock(Supplier.class);
         when(s.get()).thenReturn("Hej");
-        assertThat(Chain.of(s).getWithDefault("Hello")).isEqualTo("Hej");
+        assertThat(Chain.of(s).withDefault("Hello").get()).isEqualTo("Hej");
         verify(s).get();
         verifyNoMoreInteractions(s);
     }
@@ -139,7 +139,7 @@ public class ChainTest
     {
         Supplier<String> s = mock(Supplier.class);
         when(s.get()).thenReturn(null);
-        assertThat(Chain.of(s).getWithDefault("Hello")).isEqualTo("Hello");
+        assertThat(Chain.of(s).withDefault("Hello").get()).isEqualTo("Hello");
         verify(s).get();
         verifyNoMoreInteractions(s);
     }
@@ -150,7 +150,7 @@ public class ChainTest
     {
         Supplier<String> s = mock(Supplier.class);
         when(s.get()).thenThrow(NullPointerException.class);
-        assertThat(Chain.of(s).getWithDefault("Hello")).isEqualTo("Hello");
+        assertThat(Chain.of(s).withDefault("Hello").get()).isEqualTo("Hello");
         verify(s).get();
         verifyNoMoreInteractions(s);
     }
@@ -164,8 +164,7 @@ public class ChainTest
         Function<String, String> f2 = mock(Function.class);
         when(s.get()).thenReturn(null);
         when(f1.apply(null)).thenThrow(NullPointerException.class);
-        assertThat(Chain.of(s).and(f1).and(f2).getWithDefault("Goodbye"))
-                .isEqualTo("Goodbye");
+        assertThat(Chain.of(s).and(f1).and(f2).withDefault("Goodbye").get()).isEqualTo("Goodbye");
         verify(s).get();
         verify(f1).apply(null);
         verifyNoMoreInteractions(s, f1, f2);
@@ -177,7 +176,7 @@ public class ChainTest
     {
         Function<String, String> f = mock(Function.class);
         when(f.apply("Hello")).thenReturn(null);
-        assertThat(Chain.of(f).applyWithDefault("Hello", "Goodbye")).isEqualTo("Goodbye");
+        assertThat(Chain.of(f).withDefault("Goodbye").apply("Hello")).isEqualTo("Goodbye");
         verify(f).apply("Hello");
         verifyNoMoreInteractions(f);
     }
@@ -188,7 +187,7 @@ public class ChainTest
     {
         Function<String, String> f = mock(Function.class);
         when(f.apply("Hello")).thenReturn("Hej");
-        assertThat(Chain.of(f).applyWithDefault("Hello", "Goodbye")).isEqualTo("Hej");
+        assertThat(Chain.of(f).withDefault("Goodbye").apply("Hello")).isEqualTo("Hej");
         verify(f).apply("Hello");
         verifyNoMoreInteractions(f);
     }
@@ -199,7 +198,7 @@ public class ChainTest
     {
         Function<String, String> f = mock(Function.class);
         when(f.apply("Hello")).thenThrow(NullPointerException.class);
-        assertThat(Chain.of(f).applyWithDefault("Hello", "Goodbye")).isEqualTo("Goodbye");
+        assertThat(Chain.of(f).withDefault("Goodbye").apply("Hello")).isEqualTo("Goodbye");
         verify(f).apply("Hello");
         verifyNoMoreInteractions(f);
     }
@@ -212,7 +211,7 @@ public class ChainTest
         Function<String, String> f1 = mock(Function.class);
         Function<String, String> f2 = mock(Function.class);
         when(f1.apply(null)).thenThrow(NullPointerException.class);
-        assertThat(Chain.of(c).and(f1).and(f2).applyWithDefault(null, "Goodbye"))
+        assertThat(Chain.of(c).and(f1).and(f2).withDefault("Goodbye").apply(null))
                 .isEqualTo("Goodbye");
         verify(c).accept(null);
         verify(f1).apply(null);

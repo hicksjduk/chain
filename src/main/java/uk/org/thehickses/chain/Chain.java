@@ -55,7 +55,7 @@ public class Chain
         return consumer::accept;
     }
 
-    private static <T> Optional<T> nullTolerant(Supplier<T> supplier)
+    private static <T> Optional<T> getNullTolerant(Supplier<T> supplier)
     {
         try
         {
@@ -111,8 +111,8 @@ public class Chain
         }
 
         /**
-         * Applies this function in a null-tolerant way, returning the supplied default value if the application of the
-         * function throws a {@link NullPointerException}, or returns a null result.
+         * Adds null tolerance tp this function, returning the supplied default value if the application of the function
+         * throws a {@link NullPointerException}, or returns a null result.
          * 
          * @param arg
          *            the argument.
@@ -120,9 +120,9 @@ public class Chain
          *            the default to use.
          * @return the result of the function, or the default.
          */
-        default R applyWithDefault(T arg, R defaultIfNull)
+        default FunctionChain<T, R> withDefault(R defaultIfNull)
         {
-            return nullTolerant(() -> apply(arg)).orElse(defaultIfNull);
+            return arg -> getNullTolerant(() -> apply(arg)).orElse(defaultIfNull);
         }
     }
 
@@ -162,16 +162,16 @@ public class Chain
         }
 
         /**
-         * Runs this supplier in a null-tolerant way, returning the supplied default value if the supplier throws a
+         * Adds null tolerance to this supplier, returning the supplied default value if the supplier throws a
          * {@link NullPointerException}, or returns a null result.
          * 
          * @param defaultIfNull
          *            the default to use.
-         * @return the result of the supplier, or the default.
+         * @return the null-tolerant supplier.
          */
-        default T getWithDefault(T defaultIfNull)
+        default SupplierChain<T> withDefault(T defaultIfNull)
         {
-            return nullTolerant(this).orElse(defaultIfNull);
+            return () -> getNullTolerant(this).orElse(defaultIfNull);
         }
     }
 
