@@ -114,11 +114,9 @@ public class Chain
          * Adds null tolerance to this function, returning the supplied default value if the application of the function
          * throws a {@link NullPointerException}, or returns a null result.
          * 
-         * @param arg
-         *            the argument.
          * @param defaultIfNull
          *            the default to use.
-         * @return the result of the function, or the default.
+         * @return the null-tolerant function.
          */
         default FunctionChain<T, R> withDefault(R defaultIfNull)
         {
