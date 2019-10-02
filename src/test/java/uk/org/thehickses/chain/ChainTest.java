@@ -42,6 +42,39 @@ public class ChainTest
         verify(f).apply("Hello");
         verifyNoMoreInteractions(f);
     }
+    
+    @Test
+    public void testSingleRunnable()
+    {
+        Runnable r = mock(Runnable.class);
+        Chain.of(r).run();
+        verify(r).run();
+        verifyNoMoreInteractions(r);
+    }
+
+    @Test
+    public void testRunnableAndRunnable()
+    {
+        Runnable r1 = mock(Runnable.class);
+        Runnable r2 = mock(Runnable.class);
+        Chain.of(r1).and(r2).run();
+        verify(r1).run();
+        verify(r2).run();
+        verifyNoMoreInteractions(r1, r2);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testRunnableAndSupplier()
+    {
+        Runnable r = mock(Runnable.class);
+        Supplier<String> s = mock(Supplier.class);
+        when(s.get()).thenReturn("Hello");
+        assertThat(Chain.of(r).and(s).get()).isEqualTo("Hello");
+        verify(r).run();
+        verify(s).get();
+        verifyNoMoreInteractions(r, s);
+    }
 
     @SuppressWarnings("unchecked")
     @Test

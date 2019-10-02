@@ -55,6 +55,19 @@ public class Chain
         return consumer::accept;
     }
 
+    /**
+     * Creates a chain containing the specified runnable.
+     * 
+     * @param runnable
+     *            the runnable.
+     * @return the chain.
+     */
+    public static RunnableChain of(Runnable runnable)
+    {
+        requireNonNull(runnable);
+        return runnable::run;
+    }
+
     private static <T> Optional<T> getNullTolerant(Supplier<T> supplier)
     {
         try
@@ -206,10 +219,52 @@ public class Chain
         default <R> FunctionChain<T, R> and(Function<? super T, R> function)
         {
             requireNonNull(function);
-            return arg -> {
-                accept(arg);
-                return function.apply(arg);
-            };
+            return arg ->
+                {
+                    accept(arg);
+                    return function.apply(arg);
+                };
+        }
+    }
+
+    /**
+     * A chainable runnable.
+     */
+    @FunctionalInterface
+    public static interface RunnableChain extends Runnable
+    {
+        /**
+         * Chains together this runnable with the specified runnable.
+         * 
+         * @param runnable
+         *            the runnable.
+         * @return a chainable runnable that invokes this runnable, then the other runnable.
+         */
+        default RunnableChain and(Runnable runnable)
+        {
+            requireNonNull(runnable);
+            return () ->
+                {
+                    run();
+                    runnable.run();
+                };
+        }
+
+        /**
+         * Chains together this consumer with the specified supplier.
+         * 
+         * @param supplier
+         *            the supplier.
+         * @return a chainable supplier that runs this runnable, then invokes the supplier and returns the result.
+         */
+        default <R> SupplierChain<R> and(Supplier<R> supplier)
+        {
+            requireNonNull(supplier);
+            return () ->
+                {
+                    run();
+                    return supplier.get();
+                };
         }
     }
 }
