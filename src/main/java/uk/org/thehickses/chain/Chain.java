@@ -151,9 +151,9 @@ public class Chain
          * 
          * @param consumer
          *            the consumer.
-         * @return a runnable that passes the result of the supplier to the consumer.
+         * @return a chainable runnable that passes the result of the supplier to the consumer.
          */
-        default Runnable and(Consumer<? super T> consumer)
+        default RunnableChain and(Consumer<? super T> consumer)
         {
             requireNonNull(consumer);
             return () -> consumer.accept(get());
