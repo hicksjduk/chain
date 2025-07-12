@@ -5,7 +5,11 @@ import static java.util.Objects.*;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
+import java.util.function.IntFunction;
+import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 
 /**
  * A utility class for chaining together functional interfaces, in all combinations that make sense. Also provides
@@ -266,5 +270,85 @@ public class Chain
                     return supplier.get();
                 };
         }
+    }
+
+    /**
+     * A chainable function.
+     *
+     * @param <T>
+     *            the type of the argument to the function.
+     * @param <R>
+     *            the type of the result of the function.
+     */
+    @FunctionalInterface
+    public static interface ToIntFunctionChain<T> extends ToIntFunction<T>
+    {
+        /**
+         * Chains together this function with the specified function.
+         * 
+         * @param function
+         *            the function.
+         * @return a chainable function that returns the result of applying the specified function to the result of this
+         *         function.
+         */
+        default <V> FunctionChain<T, V> and(IntFunction<V> function)
+        {
+            requireNonNull(function);
+            return arg -> function.apply(this.applyAsInt(arg));
+        }
+
+        /**
+         * Chains together this function with the specified function.
+         * 
+         * @param function
+         *            the function.
+         * @return a chainable function that returns the result of applying the specified function to the result of this
+         *         function.
+         */
+        default ToIntFunctionChain<T> and(IntUnaryOperator function)
+        {
+            requireNonNull(function);
+            return arg -> function.applyAsInt(this.applyAsInt(arg));
+        }
+
+        /**
+         * Chains together this function with the specified consumer.
+         * 
+         * @param consumer
+         *            the consumer.
+         * @return a chainable consumer that applies this function to the argument, and passes the result to the
+         *         specified consumer.
+         */
+        default ConsumerChain<T> and(IntConsumer consumer)
+        {
+            requireNonNull(consumer);
+            return arg -> consumer.accept(applyAsInt(arg));
+        }
+
+        /**
+         * Adds null tolerance to this function, returning the supplied default value if the application of the function
+         * throws a {@link NullPointerException}, or returns a null result.
+         * 
+         * @param defaultIfNull
+         *            the default to use.
+         * @return the null-tolerant function.
+         */
+        default ToIntFunctionChain<T> withDefault(int defaultIfNull)
+        {
+            return arg -> getNullTolerant(() -> applyAsInt(arg)).orElse(defaultIfNull);
+        }
+    }
+
+    /**
+     * Creates a chain containing the specified function.
+     * 
+     * @param function
+     *            the function.
+     * @return the chain.
+     */
+    public static <T> ToIntFunctionChain<T> of(ToIntFunction<T> function)
+    {
+        requireNonNull(function);
+        return function::applyAsInt;
     }
 }
