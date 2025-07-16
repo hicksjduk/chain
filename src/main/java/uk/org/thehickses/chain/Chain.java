@@ -329,7 +329,6 @@ public class Chain
                     try
                     {
                         run();
-                        ;
                     }
                     catch (NullPointerException ex)
                     {}
