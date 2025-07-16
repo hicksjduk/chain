@@ -1,354 +1,323 @@
 package uk.org.thehickses.chain;
 
-import static java.util.Objects.*;
-
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
+import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
+import java.util.function.UnaryOperator;
 
-/**
- * A utility class for chaining together functional interfaces, in all combinations that make sense. Also provides
- * null-tolerant execution of those interfaces that return a value, where a supplied default value is returned if the
- * execution results in a {@link NullPointerException} or a null result.
- *
- * @author Jeremy Hicks
- */
 public class Chain
 {
-    /**
-     * Creates a chain containing the specified function.
-     * 
-     * @param function
-     *            the function.
-     * @return the chain.
-     */
-    public static <T, R> FunctionChain<T, R> of(Function<T, R> function)
+    public static <T> SupplierChain<T> of(Supplier<T> func)
     {
-        requireNonNull(function);
-        return function::apply;
+        return func::get;
     }
 
-    /**
-     * Creates a chain containing the specified supplier.
-     * 
-     * @param supplier
-     *            the supplier.
-     * @return the chain.
-     */
-    public static <T> SupplierChain<T> of(Supplier<T> supplier)
+    public static IntSupplierChain of(IntSupplier func)
     {
-        requireNonNull(supplier);
-        return supplier::get;
+        return func::getAsInt;
     }
 
-    /**
-     * Creates a chain containing the specified consumer.
-     * 
-     * @param consumer
-     *            the consumer.
-     * @return the chain.
-     */
-    public static <T> ConsumerChain<T> of(Consumer<T> consumer)
+    public static <T, R> FunctionChain<T, R> of(Function<T, R> func)
     {
-        requireNonNull(consumer);
-        return consumer::accept;
+        return func::apply;
     }
 
-    /**
-     * Creates a chain containing the specified runnable.
-     * 
-     * @param runnable
-     *            the runnable.
-     * @return the chain.
-     */
-    public static RunnableChain of(Runnable runnable)
+    public static <T> IntFunctionChain<T> of(IntFunction<T> func)
     {
-        requireNonNull(runnable);
-        return runnable::run;
+        return func::apply;
     }
 
-    private static <T> Optional<T> getNullTolerant(Supplier<T> supplier)
+    public static <T> ToIntFunctionChain<T> of(ToIntFunction<T> func)
     {
-        try
-        {
-            return Optional.ofNullable(supplier.get());
-        }
-        catch (NullPointerException ex)
-        {
-            return Optional.empty();
-        }
+        return func::applyAsInt;
     }
 
-    private Chain()
+    public static <T> UnaryOperatorChain<T> of(UnaryOperator<T> func)
     {
+        return func::apply;
     }
 
-    /**
-     * A chainable function.
-     *
-     * @param <T>
-     *            the type of the argument to the function.
-     * @param <R>
-     *            the type of the result of the function.
-     */
-    @FunctionalInterface
-    public static interface FunctionChain<T, R> extends Function<T, R>
+    public static IntUnaryOperatorChain of(IntUnaryOperator func)
     {
-        /**
-         * Chains together this function with the specified function.
-         * 
-         * @param function
-         *            the function.
-         * @return a chainable function that returns the result of applying the specified function to the result of this
-         *         function.
-         */
-        default <V> FunctionChain<T, V> and(Function<? super R, V> function)
-        {
-            requireNonNull(function);
-            return andThen(function)::apply;
-        }
-
-        /**
-         * Chains together this function with the specified consumer.
-         * 
-         * @param consumer
-         *            the consumer.
-         * @return a chainable consumer that applies this function to the argument, and passes the result to the
-         *         specified consumer.
-         */
-        default ConsumerChain<T> and(Consumer<? super R> consumer)
-        {
-            requireNonNull(consumer);
-            return arg -> consumer.accept(apply(arg));
-        }
-
-        /**
-         * Adds null tolerance to this function, returning the supplied default value if the application of the function
-         * throws a {@link NullPointerException}, or returns a null result.
-         * 
-         * @param defaultIfNull
-         *            the default to use.
-         * @return the null-tolerant function.
-         */
-        default FunctionChain<T, R> withDefault(R defaultIfNull)
-        {
-            return arg -> getNullTolerant(() -> apply(arg)).orElse(defaultIfNull);
-        }
+        return func::applyAsInt;
     }
 
-    /**
-     * A chainable supplier.
-     *
-     * @param <T>
-     *            the type of the result of the supplier.
-     */
-    @FunctionalInterface
+    public static <T> ConsumerChain<T> of(Consumer<T> func)
+    {
+        return func::accept;
+    }
+
+    public static IntConsumerChain of(IntConsumer func)
+    {
+        return func::accept;
+    }
+
+    public static RunnableChain of(Runnable func)
+    {
+        return func::run;
+    }
+
+    static <T> Supplier<T> nullTolerant(Supplier<T> func, T defaultIfNull)
+    {
+        return () ->
+            {
+                try
+                {
+                    return func.get();
+                }
+                catch (NullPointerException ex)
+                {
+                    return defaultIfNull;
+                }
+            };
+    }
+
+    static <T> IntSupplier nullTolerant(IntSupplier func, int defaultIfNull)
+    {
+        return () ->
+            {
+                try
+                {
+                    return func.getAsInt();
+                }
+                catch (NullPointerException ex)
+                {
+                    return defaultIfNull;
+                }
+            };
+    }
+
     public static interface SupplierChain<T> extends Supplier<T>
     {
-        /**
-         * Chains together this supplier with the specified consumer.
-         * 
-         * @param consumer
-         *            the consumer.
-         * @return a chainable runnable that passes the result of the supplier to the consumer.
-         */
-        default RunnableChain and(Consumer<? super T> consumer)
+        default RunnableChain and(Consumer<? super T> func)
         {
-            requireNonNull(consumer);
-            return () -> consumer.accept(get());
+            return () -> func.accept(get());
         }
 
-        /**
-         * Chains together this supplier with the specified function.
-         * 
-         * @param function
-         *            the function.
-         * @return a chainable supplier that returns the result of applying the function to the result of the supplier.
-         */
-        default <R> SupplierChain<R> and(Function<? super T, R> function)
+        default <R> SupplierChain<R> and(Function<? super T, R> func)
         {
-            requireNonNull(function);
-            return () -> function.apply(get());
+            return () -> func.apply(get());
         }
 
-        /**
-         * Adds null tolerance to this supplier, returning the supplied default value if the supplier throws a
-         * {@link NullPointerException}, or returns a null result.
-         * 
-         * @param defaultIfNull
-         *            the default to use.
-         * @return the null-tolerant supplier.
-         */
-        default SupplierChain<T> withDefault(T defaultIfNull)
+        default SupplierChain<T> and(UnaryOperator<T> func)
         {
-            return () -> getNullTolerant(this).orElse(defaultIfNull);
+            return () -> func.apply(get());
+        }
+
+        default IntSupplierChain and(ToIntFunction<? super T> func)
+        {
+            return () -> func.applyAsInt(get());
+        }
+
+        default Supplier<T> withDefault(T defaultIfNull)
+        {
+            return nullTolerant(this, defaultIfNull);
         }
     }
 
-    /**
-     * A chainable consumer.
-     *
-     * @param <T>
-     *            the type of the argument to the consumer.
-     */
-    @FunctionalInterface
-    public static interface ConsumerChain<T> extends Consumer<T>
+    public static interface IntSupplierChain extends IntSupplier
     {
-        /**
-         * Chains together this consumer with the specified consumer.
-         * 
-         * @param consumer
-         *            the consumer.
-         * @return a chainable consumer that passes the input argument to this consumer, then to the other consumer.
-         */
-        default ConsumerChain<T> and(Consumer<? super T> consumer)
+        public default RunnableChain and(IntConsumer func)
         {
-            requireNonNull(consumer);
-            return andThen(consumer)::accept;
+            return () -> func.accept(getAsInt());
         }
 
-        /**
-         * Chains together this consumer with the specified function.
-         * 
-         * @param function
-         *            the function.
-         * @return a chainable function that passes the input argument to the consumer, then applies the function to the
-         *         same argument and returns the result.
-         */
-        default <R> FunctionChain<T, R> and(Function<? super T, R> function)
+        public default <T> SupplierChain<T> and(IntFunction<T> func)
         {
-            requireNonNull(function);
-            return arg ->
-                {
-                    accept(arg);
-                    return function.apply(arg);
-                };
+            return () -> func.apply(getAsInt());
+        }
+
+        public default IntSupplierChain and(IntUnaryOperator func)
+        {
+            return () -> func.applyAsInt(getAsInt());
+        }
+
+        public default IntSupplier withDefault(int defaultIfNull)
+        {
+            return nullTolerant(this, defaultIfNull);
         }
     }
 
-    /**
-     * A chainable runnable.
-     */
-    @FunctionalInterface
-    public static interface RunnableChain extends Runnable
+    public static interface FunctionChain<T, R> extends Function<T, R>
     {
-        /**
-         * Chains together this runnable with the specified runnable.
-         * 
-         * @param runnable
-         *            the runnable.
-         * @return a chainable runnable that invokes this runnable, then the other runnable.
-         */
-        default RunnableChain and(Runnable runnable)
+        public default ConsumerChain<T> and(Consumer<? super R> func)
         {
-            requireNonNull(runnable);
-            return () ->
-                {
-                    run();
-                    runnable.run();
-                };
+            return arg -> func.accept(apply(arg));
         }
 
-        /**
-         * Chains together this consumer with the specified supplier.
-         * 
-         * @param supplier
-         *            the supplier.
-         * @return a chainable supplier that runs this runnable, then invokes the supplier and returns the result.
-         */
-        default <R> SupplierChain<R> and(Supplier<R> supplier)
+        public default <S> FunctionChain<T, S> and(Function<? super R, S> func)
         {
-            requireNonNull(supplier);
-            return () ->
-                {
-                    run();
-                    return supplier.get();
-                };
+            return arg -> func.apply(apply(arg));
+        }
+
+        public default FunctionChain<T, R> and(UnaryOperator<R> func)
+        {
+            return arg -> func.apply(apply(arg));
+        }
+
+        public default ToIntFunctionChain<T> and(ToIntFunction<? super R> func)
+        {
+            return arg -> func.applyAsInt(apply(arg));
+        }
+
+        public default Function<T, R> withDefault(R defaultIfNull)
+        {
+            return arg -> nullTolerant(() -> apply(arg), defaultIfNull).get();
         }
     }
 
-    /**
-     * A chainable function.
-     *
-     * @param <T>
-     *            the type of the argument to the function.
-     * @param <R>
-     *            the type of the result of the function.
-     */
-    @FunctionalInterface
+    public static interface IntFunctionChain<T> extends IntFunction<T>
+    {
+        public default IntConsumerChain and(Consumer<T> func)
+        {
+            return arg -> func.accept(apply(arg));
+        }
+
+        public default <R> IntFunctionChain<R> and(Function<? super T, R> func)
+        {
+            return arg -> func.apply(apply(arg));
+        }
+
+        public default IntFunctionChain<T> and(UnaryOperator<T> func)
+        {
+            return arg -> func.apply(apply(arg));
+        }
+
+        public default IntUnaryOperatorChain and(ToIntFunction<? super T> func)
+        {
+            return arg -> func.applyAsInt(apply(arg));
+        }
+
+        public default IntFunction<T> withDefault(T defaultIfNull)
+        {
+            return arg -> nullTolerant(() -> apply(arg), defaultIfNull).get();
+        }
+    }
+
+    public static interface UnaryOperatorChain<T> extends UnaryOperator<T>
+    {
+        public default ConsumerChain<T> and(Consumer<? super T> func)
+        {
+            return arg -> func.accept(apply(arg));
+        }
+
+        public default <R> FunctionChain<T, R> and(Function<? super T, R> func)
+        {
+            return arg -> func.apply(apply(arg));
+        }
+
+        public default UnaryOperatorChain<T> and(UnaryOperator<T> func)
+        {
+            return arg -> func.apply(apply(arg));
+        }
+
+        public default ToIntFunctionChain<T> and(ToIntFunction<T> func)
+        {
+            return arg -> func.applyAsInt(apply(arg));
+        }
+
+        public default UnaryOperator<T> withDefault(T defaultIfNull)
+        {
+            return arg -> nullTolerant(() -> apply(arg), defaultIfNull).get();
+        }
+    }
+
+    public static interface IntUnaryOperatorChain extends IntUnaryOperator
+    {
+        public default IntConsumerChain and(IntConsumer func)
+        {
+            return arg -> func.accept(applyAsInt(arg));
+        }
+
+        public default <T> IntFunctionChain<T> and(IntFunction<T> func)
+        {
+            return arg -> func.apply(applyAsInt(arg));
+        }
+
+        public default IntUnaryOperatorChain and(IntUnaryOperator func)
+        {
+            return arg -> func.applyAsInt(applyAsInt(arg));
+        }
+
+        public default IntUnaryOperator withDefault(int defaultIfNull)
+        {
+            return arg -> nullTolerant(() -> applyAsInt(arg), defaultIfNull).getAsInt();
+        }
+    }
+
     public static interface ToIntFunctionChain<T> extends ToIntFunction<T>
     {
-        /**
-         * Chains together this function with the specified function.
-         * 
-         * @param function
-         *            the function.
-         * @return a chainable function that returns the result of applying the specified function to the result of this
-         *         function.
-         */
-        default <V> FunctionChain<T, V> and(IntFunction<V> function)
+        public default ConsumerChain<T> and(IntConsumer func)
         {
-            requireNonNull(function);
-            return arg -> function.apply(this.applyAsInt(arg));
+            return arg -> func.accept(applyAsInt(arg));
         }
 
-        /**
-         * Chains together this function with the specified function.
-         * 
-         * @param function
-         *            the function.
-         * @return a chainable function that returns the result of applying the specified function to the result of this
-         *         function.
-         */
-        default ToIntFunctionChain<T> and(IntUnaryOperator function)
+        public default <R> FunctionChain<T, R> and(IntFunction<R> func)
         {
-            requireNonNull(function);
-            return arg -> function.applyAsInt(this.applyAsInt(arg));
+            return arg -> func.apply(applyAsInt(arg));
         }
 
-        /**
-         * Chains together this function with the specified consumer.
-         * 
-         * @param consumer
-         *            the consumer.
-         * @return a chainable consumer that applies this function to the argument, and passes the result to the
-         *         specified consumer.
-         */
-        default ConsumerChain<T> and(IntConsumer consumer)
+        public default ToIntFunctionChain<T> and(IntUnaryOperator func)
         {
-            requireNonNull(consumer);
-            return arg -> consumer.accept(applyAsInt(arg));
+            return arg -> func.applyAsInt(applyAsInt(arg));
         }
 
-        /**
-         * Adds null tolerance to this function, returning the supplied default value if the application of the function
-         * throws a {@link NullPointerException}, or returns a null result.
-         * 
-         * @param defaultIfNull
-         *            the default to use.
-         * @return the null-tolerant function.
-         */
-        default ToIntFunctionChain<T> withDefault(int defaultIfNull)
+        public default ToIntFunction<T> withDefault(int defaultIfNull)
         {
-            return arg -> getNullTolerant(() -> applyAsInt(arg)).orElse(defaultIfNull);
+            return arg -> nullTolerant(() -> applyAsInt(arg), defaultIfNull).getAsInt();
         }
     }
 
-    /**
-     * Creates a chain containing the specified function.
-     * 
-     * @param function
-     *            the function.
-     * @return the chain.
-     */
-    public static <T> ToIntFunctionChain<T> of(ToIntFunction<T> function)
+    public static interface ConsumerChain<T> extends Consumer<T>
     {
-        requireNonNull(function);
-        return function::applyAsInt;
+        public default Consumer<T> nullTolerant()
+        {
+            return arg ->
+                {
+                    try
+                    {
+                        accept(arg);
+                    }
+                    catch (NullPointerException ex)
+                    {}
+                };
+        }
+    }
+
+    public static interface IntConsumerChain extends IntConsumer
+    {
+        public default IntConsumer nullTolerant()
+        {
+            return arg ->
+                {
+                    try
+                    {
+                        accept(arg);
+                    }
+                    catch (NullPointerException ex)
+                    {}
+                };
+        }
+    }
+    
+    public static interface RunnableChain extends Runnable
+    {
+        public default Runnable nullTolerant()
+        {
+            return () ->
+                {
+                    try
+                    {
+                        run();;
+                    }
+                    catch (NullPointerException ex)
+                    {}
+                };
+        }
     }
 }

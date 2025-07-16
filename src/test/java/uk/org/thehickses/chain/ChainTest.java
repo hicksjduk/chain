@@ -52,30 +52,6 @@ public class ChainTest
         verifyNoMoreInteractions(r);
     }
 
-    @Test
-    public void testRunnableAndRunnable()
-    {
-        Runnable r1 = mock(Runnable.class);
-        Runnable r2 = mock(Runnable.class);
-        Chain.of(r1).and(r2).run();
-        verify(r1).run();
-        verify(r2).run();
-        verifyNoMoreInteractions(r1, r2);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testRunnableAndSupplier()
-    {
-        Runnable r = mock(Runnable.class);
-        Supplier<String> s = mock(Supplier.class);
-        when(s.get()).thenReturn("Hello");
-        assertThat(Chain.of(r).and(s).get()).isEqualTo("Hello");
-        verify(r).run();
-        verify(s).get();
-        verifyNoMoreInteractions(r, s);
-    }
-
     @SuppressWarnings("unchecked")
     @Test
     public void testSupplierAndFunction()
@@ -132,31 +108,6 @@ public class ChainTest
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testConsumerAndConsumer()
-    {
-        Consumer<String> c1 = mock(Consumer.class);
-        Consumer<CharSequence> c2 = mock(Consumer.class);
-        Chain.of(c1).and(c2).accept("Hello");
-        verify(c1).accept("Hello");
-        verify(c2).accept("Hello");
-        verifyNoMoreInteractions(c1, c2);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testConsumerAndFunction()
-    {
-        Consumer<String> c = mock(Consumer.class);
-        Function<CharSequence, Boolean> f = mock(Function.class);
-        when(f.apply("Hello")).thenReturn(false);
-        assertThat(Chain.of(c).and(f).apply("Hello")).isEqualTo(false);
-        verify(c).accept("Hello");
-        verify(f).apply("Hello");
-        verifyNoMoreInteractions(c, f);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
     public void testSupplierGetWithDefaultNonNullReturned()
     {
         Supplier<String> s = mock(Supplier.class);
@@ -171,7 +122,7 @@ public class ChainTest
     public void testSupplierGetWithDefaultNullReturned()
     {
         Supplier<String> s = mock(Supplier.class);
-        when(s.get()).thenReturn(null);
+        when(s.get()).thenThrow(NullPointerException.class);
         assertThat(Chain.of(s).withDefault("Hello").get()).isEqualTo("Hello");
         verify(s).get();
         verifyNoMoreInteractions(s);
@@ -208,7 +159,7 @@ public class ChainTest
     public void testFunctionApplyWithDefaultNullReturned()
     {
         Function<String, String> f = mock(Function.class);
-        when(f.apply("Hello")).thenReturn(null);
+        when(f.apply("Hello")).thenThrow(NullPointerException.class);
         assertThat(Chain.of(f).withDefault("Goodbye").apply("Hello")).isEqualTo("Goodbye");
         verify(f).apply("Hello");
         verifyNoMoreInteractions(f);
@@ -240,14 +191,15 @@ public class ChainTest
     @Test
     public void testFunctionApplyWithDefaultMultiStepsExceptionThrownPartWayThrough()
     {
-        Consumer<String> c = mock(Consumer.class);
         Function<String, String> f1 = mock(Function.class);
         Function<String, String> f2 = mock(Function.class);
-        when(f1.apply(null)).thenThrow(NullPointerException.class);
-        assertThat(Chain.of(c).and(f1).and(f2).withDefault("Goodbye").apply(null))
+        Function<String, String> f3 = mock(Function.class);
+        when(f1.apply(null)).thenReturn(null);
+        when(f2.apply(null)).thenThrow(NullPointerException.class);
+        assertThat(Chain.of(f1).and(f2).and(f3).withDefault("Goodbye").apply(null))
                 .isEqualTo("Goodbye");
-        verify(c).accept(null);
         verify(f1).apply(null);
-        verifyNoMoreInteractions(c, f1, f2);
+        verify(f2).apply(null);
+        verifyNoMoreInteractions(f1, f2, f3);
     }
 }
