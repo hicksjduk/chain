@@ -47,6 +47,21 @@ public class Chain2
         return func::applyAsInt;
     }
 
+    public static <T> ConsumerChain<T> of(Consumer<T> func)
+    {
+        return func::accept;
+    }
+
+    public static IntConsumerChain of(IntConsumer func)
+    {
+        return func::accept;
+    }
+
+    public static RunnableChain of(Runnable func)
+    {
+        return func::run;
+    }
+
     static <T> Supplier<T> nullTolerant(Supplier<T> func, T defaultIfNull)
     {
         return () ->
@@ -79,7 +94,7 @@ public class Chain2
 
     public static interface SupplierChain<T> extends Supplier<T>
     {
-        default Runnable and(Consumer<? super T> func)
+        default RunnableChain and(Consumer<? super T> func)
         {
             return () -> func.accept(get());
         }
@@ -98,7 +113,7 @@ public class Chain2
         {
             return () -> func.applyAsInt(get());
         }
-        
+
         default Supplier<T> withDefault(T defaultIfNull)
         {
             return nullTolerant(this, defaultIfNull);
@@ -107,7 +122,7 @@ public class Chain2
 
     public static interface IntSupplierChain extends IntSupplier
     {
-        public default Runnable and(IntConsumer func)
+        public default RunnableChain and(IntConsumer func)
         {
             return () -> func.accept(getAsInt());
         }
@@ -121,7 +136,7 @@ public class Chain2
         {
             return () -> func.applyAsInt(getAsInt());
         }
-        
+
         public default IntSupplier withDefault(int defaultIfNull)
         {
             return nullTolerant(this, defaultIfNull);
@@ -130,7 +145,7 @@ public class Chain2
 
     public static interface FunctionChain<T, R> extends Function<T, R>
     {
-        public default Consumer<T> and(Consumer<? super R> func)
+        public default ConsumerChain<T> and(Consumer<? super R> func)
         {
             return arg -> func.accept(apply(arg));
         }
@@ -149,7 +164,7 @@ public class Chain2
         {
             return arg -> func.applyAsInt(apply(arg));
         }
-        
+
         public default Function<T, R> withDefault(R defaultIfNull)
         {
             return arg -> nullTolerant(() -> apply(arg), defaultIfNull).get();
@@ -158,7 +173,7 @@ public class Chain2
 
     public static interface IntFunctionChain<T> extends IntFunction<T>
     {
-        public default IntConsumer and(Consumer<T> func)
+        public default IntConsumerChain and(Consumer<T> func)
         {
             return arg -> func.accept(apply(arg));
         }
@@ -177,7 +192,7 @@ public class Chain2
         {
             return arg -> func.applyAsInt(apply(arg));
         }
-        
+
         public default IntFunction<T> withDefault(T defaultIfNull)
         {
             return arg -> nullTolerant(() -> apply(arg), defaultIfNull).get();
@@ -186,7 +201,7 @@ public class Chain2
 
     public static interface UnaryOperatorChain<T> extends UnaryOperator<T>
     {
-        public default Consumer<T> and(Consumer<? super T> func)
+        public default ConsumerChain<T> and(Consumer<? super T> func)
         {
             return arg -> func.accept(apply(arg));
         }
@@ -205,7 +220,7 @@ public class Chain2
         {
             return arg -> func.applyAsInt(apply(arg));
         }
-        
+
         public default UnaryOperator<T> withDefault(T defaultIfNull)
         {
             return arg -> nullTolerant(() -> apply(arg), defaultIfNull).get();
@@ -214,7 +229,7 @@ public class Chain2
 
     public static interface IntUnaryOperatorChain extends IntUnaryOperator
     {
-        public default IntConsumer and(IntConsumer func)
+        public default IntConsumerChain and(IntConsumer func)
         {
             return arg -> func.accept(applyAsInt(arg));
         }
@@ -228,7 +243,7 @@ public class Chain2
         {
             return arg -> func.applyAsInt(applyAsInt(arg));
         }
-        
+
         public default IntUnaryOperator withDefault(int defaultIfNull)
         {
             return arg -> nullTolerant(() -> applyAsInt(arg), defaultIfNull).getAsInt();
@@ -237,7 +252,7 @@ public class Chain2
 
     public static interface ToIntFunctionChain<T> extends ToIntFunction<T>
     {
-        public default Consumer<T> and(IntConsumer func)
+        public default ConsumerChain<T> and(IntConsumer func)
         {
             return arg -> func.accept(applyAsInt(arg));
         }
@@ -251,10 +266,58 @@ public class Chain2
         {
             return arg -> func.applyAsInt(applyAsInt(arg));
         }
-        
+
         public default ToIntFunction<T> withDefault(int defaultIfNull)
         {
             return arg -> nullTolerant(() -> applyAsInt(arg), defaultIfNull).getAsInt();
+        }
+    }
+
+    public static interface ConsumerChain<T> extends Consumer<T>
+    {
+        public default Consumer<T> nullTolerant()
+        {
+            return arg ->
+                {
+                    try
+                    {
+                        accept(arg);
+                    }
+                    catch (NullPointerException ex)
+                    {}
+                };
+        }
+    }
+
+    public static interface IntConsumerChain extends IntConsumer
+    {
+        public default IntConsumer nullTolerant()
+        {
+            return arg ->
+                {
+                    try
+                    {
+                        accept(arg);
+                    }
+                    catch (NullPointerException ex)
+                    {}
+                };
+        }
+    }
+    
+    public static interface RunnableChain extends Runnable
+    {
+        public default Runnable nullTolerant()
+        {
+            return () ->
+                {
+                    try
+                    {
+                        run();;
+                    }
+                    catch (NullPointerException ex)
+                    {}
+                };
         }
     }
 }
