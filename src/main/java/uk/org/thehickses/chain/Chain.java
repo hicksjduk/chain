@@ -47,19 +47,34 @@ public class Chain
         return func::applyAsInt;
     }
 
-    public static <T> ConsumerChain<T> of(Consumer<T> func)
+    private static <T> ConsumerChain<T> of(Consumer<T> func)
     {
         return func::accept;
     }
 
-    public static IntConsumerChain of(IntConsumer func)
+    private static IntConsumerChain of(IntConsumer func)
     {
         return func::accept;
     }
 
-    public static RunnableChain of(Runnable func)
+    private static RunnableChain of(Runnable func)
     {
         return func::run;
+    }
+
+    public static <T> Consumer<T> nullTolerant(Consumer<T> func)
+    {
+        return of(func).nullTolerant();
+    }
+
+    public static IntConsumer nullTolerant(IntConsumer func)
+    {
+        return of(func).nullTolerant();
+    }
+
+    public static Runnable nullTolerant(Runnable func)
+    {
+        return of(func).nullTolerant();
     }
 
     static <T> Supplier<T> nullTolerant(Supplier<T> func, T defaultIfNull)
@@ -304,7 +319,7 @@ public class Chain
                 };
         }
     }
-    
+
     public static interface RunnableChain extends Runnable
     {
         public default Runnable nullTolerant()
@@ -313,7 +328,8 @@ public class Chain
                 {
                     try
                     {
-                        run();;
+                        run();
+                        ;
                     }
                     catch (NullPointerException ex)
                     {}
