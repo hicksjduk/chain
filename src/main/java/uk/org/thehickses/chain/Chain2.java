@@ -47,6 +47,36 @@ public class Chain2
         return func::applyAsInt;
     }
 
+    static <T> Supplier<T> nullTolerant(Supplier<T> func, T defaultIfNull)
+    {
+        return () ->
+            {
+                try
+                {
+                    return func.get();
+                }
+                catch (NullPointerException ex)
+                {
+                    return defaultIfNull;
+                }
+            };
+    }
+
+    static <T> IntSupplier nullTolerant(IntSupplier func, int defaultIfNull)
+    {
+        return () ->
+            {
+                try
+                {
+                    return func.getAsInt();
+                }
+                catch (NullPointerException ex)
+                {
+                    return defaultIfNull;
+                }
+            };
+    }
+
     public static interface SupplierChain<T> extends Supplier<T>
     {
         default Runnable and(Consumer<? super T> func)
@@ -68,6 +98,11 @@ public class Chain2
         {
             return () -> func.applyAsInt(get());
         }
+        
+        default Supplier<T> withDefault(T defaultIfNull)
+        {
+            return nullTolerant(this, defaultIfNull);
+        }
     }
 
     public static interface IntSupplierChain extends IntSupplier
@@ -76,15 +111,20 @@ public class Chain2
         {
             return () -> func.accept(getAsInt());
         }
-        
+
         public default <T> SupplierChain<T> and(IntFunction<T> func)
         {
             return () -> func.apply(getAsInt());
         }
-        
+
         public default IntSupplierChain and(IntUnaryOperator func)
         {
             return () -> func.applyAsInt(getAsInt());
+        }
+        
+        public default IntSupplier withDefault(int defaultIfNull)
+        {
+            return nullTolerant(this, defaultIfNull);
         }
     }
 
@@ -99,15 +139,20 @@ public class Chain2
         {
             return arg -> func.apply(apply(arg));
         }
-        
+
         public default FunctionChain<T, R> and(UnaryOperator<R> func)
         {
             return arg -> func.apply(apply(arg));
         }
-        
+
         public default ToIntFunctionChain<T> and(ToIntFunction<? super R> func)
         {
             return arg -> func.applyAsInt(apply(arg));
+        }
+        
+        public default Function<T, R> withDefault(R defaultIfNull)
+        {
+            return arg -> nullTolerant(() -> apply(arg), defaultIfNull).get();
         }
     }
 
@@ -117,20 +162,25 @@ public class Chain2
         {
             return arg -> func.accept(apply(arg));
         }
-        
+
         public default <R> IntFunctionChain<R> and(Function<? super T, R> func)
         {
             return arg -> func.apply(apply(arg));
         }
-        
+
         public default IntFunctionChain<T> and(UnaryOperator<T> func)
         {
             return arg -> func.apply(apply(arg));
         }
-        
+
         public default IntUnaryOperatorChain and(ToIntFunction<? super T> func)
         {
             return arg -> func.applyAsInt(apply(arg));
+        }
+        
+        public default IntFunction<T> withDefault(T defaultIfNull)
+        {
+            return arg -> nullTolerant(() -> apply(arg), defaultIfNull).get();
         }
     }
 
@@ -140,20 +190,25 @@ public class Chain2
         {
             return arg -> func.accept(apply(arg));
         }
-        
+
         public default <R> FunctionChain<T, R> and(Function<? super T, R> func)
         {
             return arg -> func.apply(apply(arg));
         }
-        
+
         public default UnaryOperatorChain<T> and(UnaryOperator<T> func)
         {
             return arg -> func.apply(apply(arg));
         }
-        
+
         public default ToIntFunctionChain<T> and(ToIntFunction<T> func)
         {
             return arg -> func.applyAsInt(apply(arg));
+        }
+        
+        public default UnaryOperator<T> withDefault(T defaultIfNull)
+        {
+            return arg -> nullTolerant(() -> apply(arg), defaultIfNull).get();
         }
     }
 
@@ -163,15 +218,20 @@ public class Chain2
         {
             return arg -> func.accept(applyAsInt(arg));
         }
-        
+
         public default <T> IntFunctionChain<T> and(IntFunction<T> func)
         {
             return arg -> func.apply(applyAsInt(arg));
         }
-        
+
         public default IntUnaryOperatorChain and(IntUnaryOperator func)
         {
             return arg -> func.applyAsInt(applyAsInt(arg));
+        }
+        
+        public default IntUnaryOperator withDefault(int defaultIfNull)
+        {
+            return arg -> nullTolerant(() -> applyAsInt(arg), defaultIfNull).getAsInt();
         }
     }
 
@@ -181,15 +241,20 @@ public class Chain2
         {
             return arg -> func.accept(applyAsInt(arg));
         }
-        
+
         public default <R> FunctionChain<T, R> and(IntFunction<R> func)
         {
             return arg -> func.apply(applyAsInt(arg));
         }
-        
+
         public default ToIntFunctionChain<T> and(IntUnaryOperator func)
         {
             return arg -> func.applyAsInt(applyAsInt(arg));
+        }
+        
+        public default ToIntFunction<T> withDefault(int defaultIfNull)
+        {
+            return arg -> nullTolerant(() -> applyAsInt(arg), defaultIfNull).getAsInt();
         }
     }
 }
